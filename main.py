@@ -1,7 +1,9 @@
-from pubnub import Pubnub
 import time
-import psutil
 import os
+
+from pubnub import Pubnub
+
+from modules import system
 
 
 def callback(message):
@@ -12,11 +14,10 @@ def main():
     publish_key = os.environ['PUBNUB_PUBLISH_KEY']
     subscribe_key = os.environ['PUBNUB_SUBSCRIBE_KEY']
     pubnub = Pubnub(publish_key, subscribe_key, ssl_on=False)
-    cpu_count = psutil.cpu_count()
     try:
+        cpu = system.SystemInfo()
         while True:
-            cpu = str(psutil.cpu_percent() / cpu_count)
-            pubnub.publish(channel="kiettv.raspberry.os", message=cpu, callback=None, error=callback)
+            pubnub.publish(channel="kiettv.raspberry.os", message=cpu.get_cpu_percent(), callback=None, error=callback)
             time.sleep(1)
     except KeyboardInterrupt:
         pubnub.unsubscribe(channel='kiettv.raspberry.os')
@@ -24,4 +25,7 @@ def main():
 
 
 if __name__ == '__main__':
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger(__name__)
     main()
